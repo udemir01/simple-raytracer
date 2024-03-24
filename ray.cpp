@@ -18,7 +18,7 @@ read_world(const s8 *filename)
 	while(fgets(line, sizeof(line), infile)) {
 		if (!strcmp(line, "#Camera\n")) {
 			fscanf(infile,
-		       "%f %f %f\n",
+			       "%f %f %f\n",
 			       &world.camera.position.X,
 			       &world.camera.position.Y,
 			       &world.camera.position.Z);
@@ -45,43 +45,32 @@ read_world(const s8 *filename)
 			       "%u %u\n",
 			       &world.camera.output_width,
 			       &world.camera.output_height);
-		}
-
-		if (!strcmp(line, "#BackgroundColor\n"))
+		} else if (!strcmp(line, "#BackgroundColor\n")) {
 			fscanf(infile, "%f %f %f\n",
 			       &world.background.R,
 			       &world.background.G,
 			       &world.background.B);
-
-		if (!strcmp(line, "#AmbientLight\n"))
+		} else if (!strcmp(line, "#AmbientLight\n")) {
 			fscanf(infile,
 			       "%f %f %f\n",
 			       &world.ambient_light.R,
 			       &world.ambient_light.G,
 			       &world.ambient_light.B);
-
-		if (!strcmp(line, "#MaxRecursionDepth\n"))
+		} else if (!strcmp(line, "#MaxRecursionDepth\n")) {
 			fscanf(infile, "%d\n", &world.max_recursion_depth);
-
-		if (!strcmp(line, "#ShadowRayEpsilon\n"))
+		} else if (!strcmp(line, "#ShadowRayEpsilon\n")) {
 			fscanf(infile, "%f\n", &world.shadow_ray_epsilon);
-
-		if (!strcmp(line, "#PointLight\n"))
+		} else if (!strcmp(line, "#PointLight\n")) {
 			world.light_count++;
-
-		if (!strcmp(line, "#Sphere\n"))
+		} else if (!strcmp(line, "#Sphere\n")) {
 			world.sphere_count++;
-
-		if (!strcmp(line, "#Triangle\n"))
+		} else if (!strcmp(line, "#Triangle\n")) {
 			world.triangle_count++;
-
-		if (!strcmp(line, "#Mesh\n"))
+		} else if (!strcmp(line, "#Mesh\n")) {
 			world.mesh_count++;
-
-		if (!strcmp(line, "#Material\n"))
+		} else if (!strcmp(line, "#Material\n")) {
 			world.material_count++;
-
-		if (!strcmp(line, "#VertexList\n")) {
+		} else if (!strcmp(line, "#VertexList\n")) {
 			while (fgets(line, sizeof(line), infile)) {
 				if (*line != '\n') {
 					world.vertex_count++;
@@ -224,7 +213,7 @@ read_world(const s8 *filename)
 					v3 a = world.vertex_list[(u32)ti->X];
 					v3 b = world.vertex_list[(u32)ti->Y];
 					v3 c = world.vertex_list[(u32)ti->Z];
-					*ni = HMM_NormV3(HMM_Cross(a - c, b - c));
+					*ni = normal_v3(cross(a - c, b - c));
 					ti++;
 					ni++;
 				} else {
@@ -243,7 +232,7 @@ read_world(const s8 *filename)
 		v3 a = world.vertex_list[a_id];
 		v3 b = world.vertex_list[b_id];
 		v3 c = world.vertex_list[c_id];
-		world.triangles[i].normal = HMM_NormV3(HMM_Cross(a - c, b - c));
+		world.triangles[i].normal = normal_v3(cross(a - c, b - c));
 	}
 
 	fclose(infile);
@@ -301,34 +290,22 @@ write_image(image_u32 image, const char *filename)
 internal b32
 is_inside_triangle(v3 intersect, v3 tri_a, v3 tri_b, v3 tri_c)
 {
-	b32 same_side_a = (HMM_DotV3(HMM_Cross(tri_c - tri_b, intersect - tri_b),
-				     HMM_Cross(tri_c - tri_b, tri_a - tri_b))
+	b32 same_side_a = (dot_v3(cross(tri_c - tri_b, intersect - tri_b),
+				     cross(tri_c - tri_b, tri_a - tri_b))
 			   >= 0) ? 1 : 0;
 
-	b32 same_side_b = (HMM_DotV3(HMM_Cross(tri_c - tri_a, intersect - tri_a),
-				     HMM_Cross(tri_c - tri_a, tri_b - tri_a))
+	b32 same_side_b = (dot_v3(cross(tri_c - tri_a, intersect - tri_a),
+				     cross(tri_c - tri_a, tri_b - tri_a))
 			   >= 0) ? 1 : 0;
 
-	b32 same_side_c = (HMM_DotV3(HMM_Cross(tri_a - tri_b, intersect - tri_b),
-				     HMM_Cross(tri_a - tri_b, tri_c - tri_b))
+	b32 same_side_c = (dot_v3(cross(tri_a - tri_b, intersect - tri_b),
+				     cross(tri_a - tri_b, tri_c - tri_b))
 			   >= 0) ? 1 : 0;
 
 	if (same_side_a && same_side_b && same_side_c)
 		return 1;
 
 	return 0;
-}
-
-internal f32
-random_unilateral(void)
-{
-	return (f32)rand() / (f32)RAND_MAX;
-}
-
-internal f32
-random_bilateral(void)
-{
-	return -1.0f + 2.0f*random_unilateral();
 }
 
 internal v3
@@ -342,7 +319,7 @@ ray_cast(ppm_data *world,
 	f32 eps = world->shadow_ray_epsilon;
 
 	v3 result = {};
-	v3 attenuation = HMM_V3(1, 1, 1);
+	v3 attenuation = V3(1, 1, 1);
 	f32 tolerance = 0.0001f;
 	f32 min_hit_dist = 0.001f;
 	f32 hit_dist = F32Max;
@@ -359,15 +336,15 @@ ray_cast(ppm_data *world,
 			v3 pos = vertex_list[center_id];
 			f32 r = sphere.radius;
 
-			f32 a = HMM_DotV3(dest, dest);
-			f32 b = 2.0f * HMM_DotV3(dest, origin - pos);
-			f32 c = HMM_DotV3(origin - pos, origin - pos) - r * r;
+			f32 a = dot_v3(dest, dest);
+			f32 b = 2.0f * dot_v3(dest, origin - pos);
+			f32 c = dot_v3(origin - pos, origin - pos) - r * r;
 			f32 D = b * b - 4.0f * a * c;
 			f32 denom = 2.0f * a;
 
 			if (D > tolerance){
-				f32 tp = (- b + HMM_SqrtF(D)) / denom;
-				f32 tn = (- b - HMM_SqrtF(D)) / denom;
+				f32 tp = (- b + sqrtf(D)) / denom;
+				f32 tn = (- b - sqrtf(D)) / denom;
 				f32 t = tp;
 
 				if ((tn > 0) && (tn < tp))
@@ -378,7 +355,7 @@ ray_cast(ppm_data *world,
 					hit_mat_id = sphere.mat_id;
 					hit_status = true;
 					next_origin = origin + t * dest;
-					next_normal = HMM_NormV3(next_origin - pos);
+					next_normal = normal_v3(next_origin - pos);
 				}
 			}
 		}
@@ -392,10 +369,10 @@ ray_cast(ppm_data *world,
 			v3 tri_cen = (tri_a + tri_b + tri_c) / 3;
 			v3 tri_normal = triangle.normal;
 
-			f32 denom = HMM_DotV3(dest, tri_normal);
+			f32 denom = dot_v3(dest, tri_normal);
 
 			if ((denom < -tolerance) || (denom > tolerance)) {
-				f32 t = HMM_DotV3(tri_cen - origin, tri_normal) / denom;
+				f32 t = dot_v3(tri_cen - origin, tri_normal) / denom;
 				v3 intersect = origin + t * dest;
 
 				if (is_inside_triangle(intersect, tri_a, tri_b, tri_c)
@@ -421,10 +398,10 @@ ray_cast(ppm_data *world,
 				v3 tri_cen = (tri_a + tri_b + tri_c) / 3.0f;
 				v3 tri_normal = mesh.normals[j];
 
-				f32 denom = HMM_DotV3(dest, tri_normal);
+				f32 denom = dot_v3(dest, tri_normal);
 
 				if ((denom < -tolerance) || (denom > tolerance)) {
-					f32 t = HMM_DotV3(tri_cen - origin, tri_normal) / denom;
+					f32 t = dot_v3(tri_cen - origin, tri_normal) / denom;
 					v3 intersect = origin + t * dest;
 
 					if (is_inside_triangle(intersect, tri_a, tri_b, tri_c)
@@ -451,8 +428,8 @@ ray_cast(ppm_data *world,
 			color = world->ambient_light * mat.ambient;
 
 			for (u32 i = 0; i < world->light_count; ++i) {
-				f32 light_dist = HMM_LenV3(lights[i].position - next_origin);
-				v3 light_direction = HMM_NormV3(lights[i].position - next_origin);
+				f32 light_dist = len_v3(lights[i].position - next_origin);
+				v3 light_direction = normal_v3(lights[i].position - next_origin);
 				f32 next_hit_dist = light_dist;
 				b32 next_hit_status = false;
 				v3 shadow_origin = next_origin + light_direction * eps;
@@ -463,15 +440,15 @@ ray_cast(ppm_data *world,
 					v3 pos = vertex_list[center_id];
 					f32 r = sphere.radius;
 
-					f32 a = HMM_DotV3(light_direction, light_direction);
-					f32 b = 2.0f * HMM_DotV3(light_direction, shadow_origin - pos);
-					f32 c = HMM_DotV3(shadow_origin - pos, shadow_origin - pos) - r * r;
+					f32 a = dot_v3(light_direction, light_direction);
+					f32 b = 2.0f * dot_v3(light_direction, shadow_origin - pos);
+					f32 c = dot_v3(shadow_origin - pos, shadow_origin - pos) - r * r;
 					f32 D = b * b - 4.0f * a * c;
 					f32 denom = 2.0f * a;
 
 					if (D > tolerance){
-						f32 tp = (- b + HMM_SqrtF(D)) / denom;
-						f32 tn = (- b - HMM_SqrtF(D)) / denom;
+						f32 tp = (- b + sqrtf(D)) / denom;
+						f32 tn = (- b - sqrtf(D)) / denom;
 						f32 t = tp;
 
 						if ((tn > 0) && (tn < tp))
@@ -495,10 +472,10 @@ ray_cast(ppm_data *world,
 					v3 tri_cen = (tri_a + tri_b + tri_c) / 3.0f;
 					v3 tri_normal = triangle.normal;
 
-					f32 denom = HMM_DotV3(light_direction, tri_normal);
+					f32 denom = dot_v3(light_direction, tri_normal);
 
 					if ((denom < -tolerance) || (denom > tolerance)) {
-						f32 t = HMM_DotV3(tri_cen - shadow_origin, tri_normal)
+						f32 t = dot_v3(tri_cen - shadow_origin, tri_normal)
 							/ denom;
 						v3 intersect = shadow_origin + t * light_direction;
 
@@ -524,10 +501,10 @@ ray_cast(ppm_data *world,
 						v3 tri_cen = (tri_a + tri_b + tri_c) / 3.0f;
 						v3 tri_normal = mesh.normals[j];
 
-						f32 denom = HMM_DotV3(light_direction, tri_normal);
+						f32 denom = dot_v3(light_direction, tri_normal);
 
 						if ((denom < -tolerance) || (denom > tolerance)) {
-							f32 t = HMM_DotV3(tri_cen - shadow_origin, tri_normal)
+							f32 t = dot_v3(tri_cen - shadow_origin, tri_normal)
 								/ denom;
 							v3 intersect = shadow_origin + t * light_direction;
 
@@ -543,7 +520,7 @@ ray_cast(ppm_data *world,
 				if (next_hit_status)
 					continue;
 
-				f32 cos_value = HMM_DotV3(next_normal, light_direction);
+				f32 cos_value = dot_v3(next_normal, light_direction);
 				if (cos_value < 0)
 					cos_value = 0;
 				v3 intensity = lights[i].intensity / (light_dist * light_dist);
@@ -551,8 +528,8 @@ ray_cast(ppm_data *world,
 
 				cos_value = 1;
 				for (u32 j = 0; j < mat.phong_exp; ++j)
-					cos_value *= HMM_DotV3(next_normal,
-							       HMM_NormV3(- dest + light_direction));
+					cos_value *= dot_v3(next_normal,
+							       normal_v3(- dest + light_direction));
 				if (cos_value < 0)
 					cos_value = 0;
 				color += mat.specular * cos_value * intensity;
@@ -570,8 +547,8 @@ ray_cast(ppm_data *world,
 
 			origin = next_origin;
 
-			v3 pure_bounce = dest - 2.0f*HMM_DotV3(dest, next_normal)*next_normal;
-			dest = HMM_NormV3(pure_bounce);
+			v3 pure_bounce = dest - 2.0f*dot_v3(dest, next_normal)*next_normal;
+			dest = normal_v3(pure_bounce);
 		} else {
 			result += attenuation * color;
 			break;
@@ -602,9 +579,9 @@ main(int arg_count,
 	v3 camera_gaze = world.camera.gaze;
 	v3 camera_up = world.camera.up;
 
-	v3 camera_z = HMM_NormV3(-camera_gaze);
-	v3 camera_y = HMM_NormV3(camera_up);
-	v3 camera_x = HMM_NormV3(HMM_Cross(camera_z, camera_y));
+	v3 camera_z = normal_v3(-camera_gaze);
+	v3 camera_y = normal_v3(camera_up);
+	v3 camera_x = normal_v3(cross(camera_z, camera_y));
 
 	f32 film_left = world.camera.film_left;
 	f32 film_right = world.camera.film_right;
@@ -617,11 +594,9 @@ main(int arg_count,
 	f32 film_height = film_top - film_bottom;
 	f32 film_half_width = 0.5f * film_width;
 	f32 film_half_height = 0.5f * film_height;
-	f32 half_pix_width = 0.5f / image.width;
-	f32 half_pix_height = 0.5f / image.height;
 
 	u32 pixel_size = get_total_pixel_size(image);
-	u32 rays_per_pixel = 1;
+	u32 rays_per_pixel = 100;
 	u8 *out = &image.pixels[pixel_size - 1];
 
 	for (u32 y = 0; y < image.height; ++y) {
@@ -642,7 +617,7 @@ main(int arg_count,
 					+ film_x * film_half_width * camera_x
 					+ film_y * film_half_height * camera_y;
 				v3 ray_origin = camera_pos;
-				v3 ray_destination = HMM_NormV3(film_pos - camera_pos);
+				v3 ray_destination = normal_v3(film_pos - camera_pos);
 				color += contrib * ray_cast(&world, ray_origin, ray_destination);
 			}
 

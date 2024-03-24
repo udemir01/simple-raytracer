@@ -10,6 +10,6 @@ popd
 
 pushd ..\data
 
-..\..\build\ray\ray.exe input2.txt
+..\..\build\ray\ray.exe input1.txt
 start output.ppm
 popd

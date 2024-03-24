@@ -1,25 +1,14 @@
 #define _CRT_SECURE_NO_WARNINGS
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <float.h>
-
-#include "ray_math.h"
 
 #define internal static
-#define F32Max FLT_MAX
-#define F32Min -FLT_MAX
+#define global static
+#define local_persist static
 
-typedef unsigned char u8;
-typedef unsigned short u16;
-typedef unsigned int u32;
-typedef char s8;
-typedef short s16;
-typedef int s32;
-typedef s32 b32;
-typedef s32 b32x;
-typedef float f32;
-typedef HMM_Vec3 v3;
+#include "ray_math.h"
 
 struct camera {
 	v3 position;
