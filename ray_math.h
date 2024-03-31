@@ -1,17 +1,17 @@
 #include <float.h>
 
-#define F32Max FLT_MAX
-#define F32Min -FLT_MAX
+#define F32MAX FLT_MAX
+#define F32MIN -FLT_MAX
 
 typedef unsigned char u8;
-typedef unsigned short u16;
-typedef unsigned int u32;
 typedef char s8;
+typedef unsigned short u16;
 typedef short s16;
+typedef unsigned int u32;
 typedef int s32;
+typedef float f32;
 typedef s32 b32;
 typedef s32 b32x;
-typedef float f32;
 
 union v3 {
     struct {
@@ -151,113 +151,31 @@ sqrtf(f32 number)
     return 1.0f / inv_sqrtf(number);
 }
 
-static inline v3 normal_v3(v3 A)
+static inline v3
+normal_v3(v3 A)
 {
     return mul_f(A, inv_sqrtf(dot_v3(A, A)));
 }
 
-static inline float len_v3(v3 A)
+static inline float
+len_v3(v3 A)
 {
     return sqrtf(dot_v3(A, A));
 }
 
-static inline b32
-operator!=(v3 left, v3 right)
-{
-    return !eq_v3(left, right);
-}
-
-static inline b32
-operator==(v3 left, v3 right)
-{
-    return eq_v3(left, right);
-}
-
-static inline v3
-operator+(v3 left, v3 right)
-{
-    return add_v3(left, right);
-}
-
-static inline v3
-operator-(v3 left, v3 right)
-{
-    return sub_v3(left, right);
-}
-
-static inline v3
-operator*(v3 left, v3 right)
-{
-    return mul_v3(left, right);
-}
-
-static inline v3
-operator*(v3 left, f32 right)
-{
-    return mul_f(left, right);
-}
-
-static inline v3
-operator*(f32 left, v3 right)
-{
-    return mul_f(right, left);
-}
-
-static inline v3
-operator/(v3 left, v3 right)
-{
-    return div_v3(left, right);
-}
-
-static inline v3
-operator/(v3 left, f32 right)
-{
-    return div_f(left, right);
-}
-
-static inline v3
-&operator+=(v3 &left, v3 right)
-{
-    return left = left + right;
-}
-
-static inline v3
-&operator-=(v3 &left, v3 right)
-{
-    return left = left - right;
-}
-
-static inline v3
-&operator*=(v3 &left, v3 right)
-{
-    return left = left * right;
-}
-
-static inline v3
-&operator*=(v3 &left, f32 right)
-{
-    return left = left * right;
-}
-
-static inline v3
-&operator/=(v3 &left, v3 right)
-{
-    return left = left / right;
-}
-
-static inline v3
-&operator/=(v3 &left, f32 right)
-{
-    return left = left / right;
-}
-
-static inline v3
-operator-(v3 in)
-{
-    v3 result;
-    result.X = -in.X;
-    result.Y = -in.Y;
-    result.Z = -in.Z;
-
-    return result;
-}
+static inline b32 operator!=(v3 left, v3 right) { return !eq_v3(left, right); }
+static inline b32 operator==(v3 left, v3 right) { return eq_v3(left, right); }
+static inline v3 operator+(v3 left, v3 right) { return add_v3(left, right); }
+static inline v3 &operator+=(v3 &left, v3 right) { return left = left + right; }
+static inline v3 operator-(v3 left, v3 right) { return sub_v3(left, right); }
+static inline v3 &operator-=(v3 &left, v3 right) { return left = left - right; }
+static inline v3 operator*(v3 left, v3 right) { return mul_v3(left, right); }
+static inline v3 operator*(v3 left, f32 right) { return mul_f(left, right); }
+static inline v3 operator*(f32 left, v3 right) { return mul_f(right, left); }
+static inline v3 &operator*=(v3 &left, v3 right) { return left = left * right; }
+static inline v3 &operator*=(v3 &left, f32 right) { return left = left * right; }
+static inline v3 operator-(v3 in) { return in *= -1; }
+static inline v3 operator/(v3 left, v3 right) { return div_v3(left, right); }
+static inline v3 operator/(v3 left, f32 right) { return div_f(left, right); }
+static inline v3 &operator/=(v3 &left, v3 right) { return left = left / right; }
+static inline v3 &operator/=(v3 &left, f32 right) { return left = left / right; }
