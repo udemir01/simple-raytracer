@@ -17,12 +17,12 @@ read_world(const s8 *filename)
 
 	while(fgets(line, sizeof(line), infile)) {
 		if (!strcmp(line, "#Camera\n")) {
-			fscanf(infile, "%f %f %f\n", &world.camera.position.X, &world.camera.position.Y, &world.camera.position.Z);
-			fscanf(infile, "%f %f %f\n", &world.camera.gaze.X, &world.camera.gaze.Y, &world.camera.gaze.Z);
-			fscanf(infile, "%f %f %f\n", &world.camera.up.X, &world.camera.up.Y, &world.camera.up.Z);
-			fscanf(infile, "%f %f %f %f\n", &world.camera.film_left, &world.camera.film_right, &world.camera.film_bottom, &world.camera.film_top);
-			fscanf(infile, "%f", &world.camera.film_dist);
-			fscanf(infile, "%u %u\n", &world.camera.output_width, &world.camera.output_height);
+			fscanf(infile, "%f %f %f\n", &world.cam.position.X, &world.cam.position.Y, &world.cam.position.Z);
+			fscanf(infile, "%f %f %f\n", &world.cam.gaze.X, &world.cam.gaze.Y, &world.cam.gaze.Z);
+			fscanf(infile, "%f %f %f\n", &world.cam.up.X, &world.cam.up.Y, &world.cam.up.Z);
+			fscanf(infile, "%f %f %f %f\n", &world.cam.film_left, &world.cam.film_right, &world.cam.film_bottom, &world.cam.film_top);
+			fscanf(infile, "%f", &world.cam.film_dist);
+			fscanf(infile, "%u %u\n", &world.cam.output_width, &world.cam.output_height);
 		} else if (!strcmp(line, "#BackgroundColor\n")) {
 			fscanf(infile, "%f %f %f\n", &world.background.R, &world.background.G, &world.background.B);
 		} else if (!strcmp(line, "#AmbientLight\n")) {
@@ -477,21 +477,21 @@ main(int arg_count, char **args)
 
 	ppm_data world = read_world(args[1]);
 
-	image_u32 image = allocate_image(world.camera.output_width, world.camera.output_height);
+	image_u32 image = allocate_image(world.cam.output_width, world.cam.output_height);
 
-	v3 camera_pos = world.camera.position;
-	v3 camera_gaze = world.camera.gaze;
-	v3 camera_up = world.camera.up;
-	v3 camera_z = normal_v3(-camera_gaze);
-	v3 camera_y = normal_v3(camera_up);
-	v3 camera_x = normal_v3(cross(camera_z, camera_y));
+	v3 cam_pos = world.cam.position;
+	v3 cam_gaze = world.cam.gaze;
+	v3 cam_up = world.cam.up;
+	v3 cam_z = normal_v3(-cam_gaze);
+	v3 cam_y = normal_v3(cam_up);
+	v3 cam_x = normal_v3(cross(cam_z, cam_y));
 
-	f32 film_left = world.camera.film_left;
-	f32 film_right = world.camera.film_right;
-	f32 film_bottom = world.camera.film_bottom;
-	f32 film_top = world.camera.film_top;
-	f32 film_dist = world.camera.film_dist;
-	v3 film_center = camera_pos - film_dist * camera_z;
+	f32 film_left = world.cam.film_left;
+	f32 film_right = world.cam.film_right;
+	f32 film_bottom = world.cam.film_bottom;
+	f32 film_top = world.cam.film_top;
+	f32 film_dist = world.cam.film_dist;
+	v3 film_center = cam_pos - film_dist * cam_z;
 	f32 film_width = film_right - film_left;
 	f32 film_height = film_top - film_bottom;
 	f32 film_half_width = 0.5f * film_width;
@@ -510,9 +510,9 @@ main(int arg_count, char **args)
 			f32 contrib = 1.0f / (f32)rays_per_pixel;
 
 			for (u32 i = 0; i < rays_per_pixel; ++i) {
-				v3 film_pos = film_center + film_x*film_half_width*camera_x + film_y*film_half_height*camera_y;
-				v3 ray_origin = camera_pos;
-				v3 ray_destination = normal_v3(film_pos - camera_pos);
+				v3 film_pos = film_center + film_x*film_half_width*cam_x + film_y*film_half_height*cam_y;
+				v3 ray_origin = cam_pos;
+				v3 ray_destination = normal_v3(film_pos - cam_pos);
 				color += contrib * ray_cast(&world, ray_origin, ray_destination);
 			}
 

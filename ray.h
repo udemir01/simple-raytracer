@@ -73,7 +73,7 @@ struct ppm_data {
 	point_light *point_lights;
 	u32 vertex_count;
 	v3 *vertex_list;
-	camera camera;
+	camera cam;
 	v3 background;
 	v3 ambient_light;
 	u32 max_recursion_depth;
